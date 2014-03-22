@@ -1,0 +1,12 @@
+Roll no: 110050063     Name: TLD Manoj
+Roll no: 110050078     Name: T.Bhargava Reddy
+
+Changes Done to the source code:
+
+1) Scanner.hh--> Added the procedure for making the basic block a token.
+2) Parser.hh --> parsed the basic_block to make them legitimate stings and then passed to the ast file
+				 Added ast's to the program and also precedence order
+
+3) Ast.cc --> Implemented methods for Ifelse, Goto, Comparison AST's so as to make the expressions work.
+4) icode.cc --> Added the method for IC_Stmt for comparison, IF_else, GOT_stmt so that they go into execution
+5) Basic_Block statement --> We need to start the BB_IC_stmt so that label's are printed for the respective cateogries
