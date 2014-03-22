@@ -263,7 +263,7 @@ void Move_IC_Stmt::print_assembly(ostream & file_buffer)
 	switch (assem_format)
 	{
 	case a_op_r_o1: 
-			file_buffer << "\t" << op_name << ", ";
+			file_buffer << "\t" << op_name << " ";
 			result->print_asm_opd(file_buffer);
 			file_buffer << ", ";
 			opd1->print_asm_opd(file_buffer);
@@ -272,7 +272,7 @@ void Move_IC_Stmt::print_assembly(ostream & file_buffer)
 			break; 
 
 	case a_op_o1_r: 
-			file_buffer << "\t" << op_name << ", ";
+			file_buffer << "\t" << op_name << " ";
 			opd1->print_asm_opd(file_buffer);
 			file_buffer << ", ";
 			result->print_asm_opd(file_buffer);
@@ -347,7 +347,31 @@ void Comparison_IC_Stmt::print_icode(ostream & file_buffer)
 
 void Comparison_IC_Stmt::print_assembly(ostream & file_buffer)
 {
-	
+	CHECK_INVARIANT (opd1, "Opd1 cannot be NULL for a Comparison IC Stmt");
+	CHECK_INVARIANT (opd2, "Opd2 cannot be NULL for a Comparison IC Stmt");
+	CHECK_INVARIANT (result, "Result cannot be NULL for a Comparison IC Stmt");
+
+	string operation_name = op_desc.get_name();
+
+	Assembly_Format assembly_format = op_desc.get_assembly_format();
+
+	switch (assembly_format)
+	{
+	case a_op_r_o1_o2: 
+			file_buffer << " " << operation_name << " ";
+			result->print_asm_opd(file_buffer);
+			file_buffer << ", ";
+			opd1->print_asm_opd(file_buffer);
+			file_buffer<< ", ";
+			opd2->print_asm_opd(file_buffer);
+			file_buffer << "\n";
+
+			break; 
+
+	default: CHECK_INVARIANT(CONTROL_SHOULD_NOT_REACH, 
+				"Assembly code format not supported:: case: Comparison_IC_Stmt");
+		break;
+	}
 }
 
 /****************************** Class If_else_IC_Stmt **************************/
@@ -410,7 +434,33 @@ void If_else_IC_Stmt::print_icode(ostream & file_buffer)
 
 void If_else_IC_Stmt::print_assembly(ostream & file_buffer)
 {
+	CHECK_INVARIANT (opd1, "Opd1 cannot be NULL for a If_else_IC_Stmt");
 
+	string operation_name = op_desc.get_name();
+
+	Assembly_Format assembly_format = op_desc.get_assembly_format();
+
+	Ics_Opd * zero_register = new Register_Addr_Opd(machine_dscr_object.spim_register_table[zero]);
+
+	string l;
+	l = "label" + to_string(result);
+
+	switch (assembly_format)
+	{
+	case a_op_r_o1: 
+			file_buffer << " " << operation_name << " ";
+			opd1->print_asm_opd(file_buffer);
+			file_buffer << ", ";
+			zero_register->print_asm_opd(file_buffer);
+			file_buffer<< ", "<<l;
+			file_buffer << "\n";
+
+			break; 
+
+	default: CHECK_INVARIANT(CONTROL_SHOULD_NOT_REACH, 
+				"Intermediate code format not supported");
+		break;
+	}
 }
 
 /****************************** Class GOTO_IC_Stmt **************************/
@@ -461,7 +511,25 @@ void GOTO_IC_Stmt::print_icode(ostream & file_buffer)
 
 void GOTO_IC_Stmt::print_assembly(ostream & file_buffer)
 {
+	string operation_name = op_desc.get_name();
+	Assembly_Format assembly_format = op_desc.get_assembly_format();
 
+	string l;
+	l = "label" + to_string(result);
+
+	switch (assembly_format)
+	{
+	case a_op_o1: 
+			file_buffer << " " << "j";
+			file_buffer<< " "<<l;
+			file_buffer << "\n";
+
+			break; 
+
+	default: CHECK_INVARIANT(CONTROL_SHOULD_NOT_REACH, 
+				"Intermediate code format not supported");
+		break;
+	}
 }
 
 /****************************** Class BB_IC_Stmt **************************/
@@ -494,7 +562,10 @@ void BB_IC_Stmt::print_icode(ostream & file_buffer)
 
 void BB_IC_Stmt::print_assembly(ostream & file_buffer)
 {
+	string l;
+	l = "label" + to_string(result);
 
+			file_buffer<<"\n"<<l<< ":\n";
 }
 
 
