@@ -20,8 +20,8 @@ label4:
 label5: 
  load:	v0 <- i
  store:	num <- v0
- iLoad:	v0 <- 5
- store:	i <- v0
+ iLoad:	t0 <- 5
+ store:	i <- t0
 
 label6: 
  load:	v0 <- i

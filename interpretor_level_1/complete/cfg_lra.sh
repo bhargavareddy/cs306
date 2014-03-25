@@ -10,7 +10,7 @@ do
 	echo $i
 	./cfglp -lra -icode test_files/${i}s306.cfg
 	./cfglp64 -lra -icode test_files_given/${i}s306.cfg 
-	diff -Bb test_files/${i}s306.cfg.ic test_files_given/${i}s306.cfg.ic
+	diff -Bb test_files/${i}s306.cfg.spim test_files_given/${i}s306.cfg.spim >/home/bhargava/diff_files/${i}.diff
 	cd test_files
 done
 

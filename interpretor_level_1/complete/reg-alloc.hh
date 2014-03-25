@@ -93,7 +93,8 @@ class Register_Descriptor
     string get_name();
     void clear_lra_symbol_list();
 
-    bool get_used_for_expr_result();
+    bool get_use_for_expr_result();
+    void set_use_for_expr_result();
     void reset_use_for_expr_result();
 
     bool is_free();
@@ -202,7 +203,9 @@ typedef enum
 	mc_2r, 
 	r2m, 
 	c2m,
-	r2r
+	r2r,
+  c2r,
+  m2r
 } Lra_Scenario;
 
 class Lra_Outcome

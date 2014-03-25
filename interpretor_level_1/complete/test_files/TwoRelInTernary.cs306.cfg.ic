@@ -4,18 +4,15 @@
 label2:
  iLoad:	v0 <- 4
  store:	a <- v0
- iLoad:	v0 <- 3
- store:	b <- v0
- iLoad:	v0 <- 2
- store:	c <- v0
- iLoad:	v0 <- 10
- store:	d <- v0
- load:	v0 <- b
- load:	t0 <- c
- sgt:	t1 <- v0 , t0
- load:	v0 <- d
- sgt:	t0 <- t1 , v0
- bne: t0 , zero : goto label3
+ iLoad:	t0 <- 3
+ store:	b <- t0
+ iLoad:	t1 <- 2
+ store:	c <- t1
+ iLoad:	t2 <- 10
+ store:	d <- t2
+ sgt:	t3 <- t0 , t1
+ sgt:	t4 <- t3 , t2
+ bne: t4 , zero : goto label3
  goto label4
 
 label3:

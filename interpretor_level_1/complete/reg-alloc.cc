@@ -57,6 +57,8 @@ Spim_Register Register_Descriptor::get_register()             	{ return reg_id; 
 string Register_Descriptor::get_name()				{ return reg_name; }
 bool Register_Descriptor::is_symbol_list_empty()         	{ return lra_symbol_list.empty(); }
 
+
+
 bool Register_Descriptor::is_free()     
 { 
 	if ((reg_use == gp_data) && (lra_symbol_list.empty())) 
@@ -78,6 +80,22 @@ bool Register_Descriptor::find_symbol_entry_in_list(Symbol_Table_Entry & sym_ent
 			return true;
 
 	return false;
+}
+
+bool Register_Descriptor::get_use_for_expr_result()
+{
+	return used_for_expr_result;
+}
+
+void Register_Descriptor::reset_use_for_expr_result()
+{
+	used_for_expr_result = false;
+}
+
+
+void Register_Descriptor::set_use_for_expr_result()
+{
+	used_for_expr_result = true;
 }
 
 void Register_Descriptor::clear_lra_symbol_list()
@@ -135,6 +153,7 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 	Symbol_Table_Entry * source_symbol_entry, * destination_symbol_entry;
 
 	destination_register = NULL;
+	destination_symbol_entry = NULL;
 	source_register = NULL;
 	result_register = NULL;
 
@@ -173,12 +192,22 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 			result_register = source_register;
 			is_same_as_source = true;
 			load_needed = false;
+			if(destination_register != NULL)
+				destination_register->clear_lra_symbol_list();
 		}
 		else if (destination_register != NULL)
 		{
-			result_register = destination_register;
-			is_same_as_destination = true;
-			load_needed = true;
+			if(typeid(*source_memory) != typeid(Number_Ast<int>)){
+				result_register = destination_register;
+				is_same_as_destination = true;
+				load_needed = true;
+			}
+			else
+			{
+				result_register = machine_dscr_object.get_new_register();
+				is_a_new_register = true;
+				load_needed = true;
+			}
 		}
 		else 
 		{
@@ -222,6 +251,34 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 
 		break;
 
+	case m2r:
+		CHECK_INVARIANT(source_memory, "Sourse ast pointer cannot be NULL for m2r scenario in lra");
+
+		source_symbol_entry = &(source_memory->get_symbol_entry());
+		source_register = source_symbol_entry->get_register(); 
+
+
+
+		if (source_register != NULL)
+		{
+			result_register = source_register;
+			is_same_as_source = true;
+			load_needed = false;
+		}
+		else 
+		{
+			result_register = machine_dscr_object.get_new_register();
+			is_a_new_register = true;
+			load_needed = true;
+		}
+		break;
+
+	case c2r:
+			result_register = machine_dscr_object.get_new_register();
+			is_a_new_register = true;
+			load_needed = true;
+		break;
+
 	default:
 		CHECK_INVARIANT(CONTROL_SHOULD_NOT_REACH,
 				"Illegal local register allocation scenario");
@@ -235,7 +292,8 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 	if (destination_register)
 		destination_symbol_entry->free_register(destination_register); 
 
-	destination_symbol_entry->update_register(result_register);
+	if(destination_symbol_entry != NULL)
+		destination_symbol_entry->update_register(result_register);
 }
 
 /******************************* Machine Description *****************************************/

@@ -4,14 +4,13 @@
 label2: 
  iLoad:	v0 <- 2
  store:	iftmp0 <- v0
- iLoad:	v0 <- 10
- store:	iftmp3 <- v0
- iLoad:	v0 <- 11
- store:	iftmp10 <- v0
- load:	v0 <- iftmp0
- iLoad:	t0 <- 0
- sne: t1 <- v0 , t0
- bne: t1 , zero : goto label3
+ iLoad:	t0 <- 10
+ store:	iftmp3 <- t0
+ iLoad:	t1 <- 11
+ store:	iftmp10 <- t1
+ iLoad:	t2 <- 0
+ sne: t3 <- v0 , t2
+ bne: t3 , zero : goto label3
  goto label4
 
 label3: 
@@ -30,10 +29,10 @@ label4:
 label5: 
  load:	v0 <- iftmp12
  store:	iftmp0 <- v0
- load:	v0 <- iftmp3
- iLoad:	t0 <- 0
- sne: t1 <- v0 , t0
- bne: t1 , zero : goto label6
+ load:	t0 <- iftmp3
+ iLoad:	t1 <- 0
+ sne: t2 <- t0 , t1
+ bne: t2 , zero : goto label6
  goto label7
 
 label6: 

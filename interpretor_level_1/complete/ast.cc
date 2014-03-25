@@ -157,9 +157,18 @@ Code_For_Ast & GOTO_AST::compile()
 
 Code_For_Ast & GOTO_AST::compile_and_optimize_ast(Lra_Outcome & lra)
 {
+	Icode_Stmt * goto_stmt = NULL;
+
+    goto_stmt = new GOTO_IC_Stmt(jump,num);
+    list<Icode_Stmt *> ic_list;
+	
+	ic_list.push_back(goto_stmt);
+
 	Code_For_Ast * assign_stmt;
-	assign_stmt = NULL;
-	return * assign_stmt;
+	if (ic_list.empty() == false)
+		assign_stmt = new Code_For_Ast(ic_list, machine_dscr_object.spim_register_table[zero]);
+
+	return *assign_stmt;
 }
 ////////////////////////////////////////////////////////////////
 // If else ast
@@ -253,9 +262,33 @@ Code_For_Ast & If_Else_Ast::compile()
 
 Code_For_Ast & If_Else_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 {
+	CHECK_INVARIANT((cond != NULL), "cond cannot be null");
+
+	Code_For_Ast & compare = cond->compile_and_optimize_ast(lra);
+
+	Register_Descriptor * load_register_c = compare.get_reg();
+
+	Ics_Opd * register_opd_c = new Register_Addr_Opd(load_register_c);
+	
+	load_register_c->clear_lra_symbol_list();
+    Icode_Stmt * branch_stmt = NULL;
+    Icode_Stmt * goto_stmt = NULL;
+
+    branch_stmt = new If_else_IC_Stmt(bne,register_opd_c, t);
+    goto_stmt = new GOTO_IC_Stmt(jump,f);
+    list<Icode_Stmt *> ic_list;
+	
+	if (compare.get_icode_list().empty() == false)
+		ic_list = compare.get_icode_list();
+
+	ic_list.push_back(branch_stmt);
+	ic_list.push_back(goto_stmt);
+
 	Code_For_Ast * assign_stmt;
-	assign_stmt = NULL;
-	return * assign_stmt;
+	if (ic_list.empty() == false)
+		assign_stmt = new Code_For_Ast(ic_list, load_register_c);
+
+	return *assign_stmt;
 }
 ////////////////////////////////////////////////////////////////
 /*Comparison Statement*/
@@ -388,10 +421,72 @@ Code_For_Ast & Comparison_Ast::compile()
 
 Code_For_Ast & Comparison_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 {
+	CHECK_INVARIANT((lhs != NULL), "Lhs cannot be null");
+	CHECK_INVARIANT((rhs != NULL), "Rhs cannot be null");
+
+	if(typeid(*lhs) == typeid(Number_Ast<int>))
+		lra.optimize_lra(c2r, lhs, NULL);
+
+	else if(typeid(*lhs) == typeid(Name_Ast))
+		lra.optimize_lra(m2r,NULL,lhs);
+
+	Code_For_Ast & lsl = lhs->compile_and_optimize_ast(lra);
+
+	if(typeid(*rhs) == typeid(Number_Ast<int>))
+		lra.optimize_lra(c2r,rhs,NULL);
+
+	else if(typeid(*rhs) == typeid(Name_Ast))
+		lra.optimize_lra(m2r,NULL,rhs);
+
+	Code_For_Ast & lsr = rhs->compile_and_optimize_ast(lra);
+
+	Register_Descriptor * load_register_l = lsl.get_reg();
+	Register_Descriptor * load_register_r = lsr.get_reg();
+
+	Ics_Opd * register_opd_1 = new Register_Addr_Opd(load_register_l);
+	Ics_Opd * register_opd_2 = new Register_Addr_Opd(load_register_r);
+
+	Register_Descriptor * register_r = machine_dscr_object.get_new_register();
+	Symbol_Table_Entry & sym_entry = * new Symbol_Table_Entry();
+	register_r->update_symbol_information(sym_entry);
+
+	Ics_Opd * register_result = new Register_Addr_Opd(register_r);
+	if(typeid(*lhs) == typeid(Number_Ast<int>) || typeid(*lhs) == typeid(Comparison_Ast))
+		load_register_l->clear_lra_symbol_list();
+	if(typeid(*lhs) == typeid(Name_Ast))
+		{
+			//(lhs->get_symbol_entry()).free_register(load_register_l);
+		}
+    if(typeid(*rhs) == typeid(Number_Ast<int>) || typeid(*rhs) == typeid(Comparison_Ast))
+		load_register_r->clear_lra_symbol_list();
+	if(typeid(*rhs) == typeid(Name_Ast))
+		{
+			//(rhs->get_symbol_entry()).free_register(load_register_r);
+		}
+    Icode_Stmt * load_stmt = NULL;
+
+    if(comp == 0) load_stmt = new Comparison_IC_Stmt(sge, register_opd_1,register_opd_2, register_result);
+    if(comp == 1) load_stmt = new Comparison_IC_Stmt(sgt, register_opd_1,register_opd_2, register_result);
+    if(comp == 2) load_stmt = new Comparison_IC_Stmt(sle, register_opd_1,register_opd_2, register_result);
+    if(comp == 3) load_stmt = new Comparison_IC_Stmt(slt, register_opd_1,register_opd_2, register_result);
+    if(comp == 4) load_stmt = new Comparison_IC_Stmt(seq, register_opd_1,register_opd_2, register_result);
+    if(comp == 5) load_stmt = new Comparison_IC_Stmt(sne, register_opd_1,register_opd_2, register_result);
+
+    list<Icode_Stmt *> ic_list;
+	
+	if (lsl.get_icode_list().empty() == false)
+		ic_list = lsl.get_icode_list();
+
+	if (lsr.get_icode_list().empty() == false)
+		ic_list.splice(ic_list.end(), lsr.get_icode_list());
+
+	ic_list.push_back(load_stmt);
 
 	Code_For_Ast * assign_stmt;
-	assign_stmt = NULL;
-	return * assign_stmt;
+	if (ic_list.empty() == false)
+		assign_stmt = new Code_For_Ast(ic_list, register_r);
+
+	return *assign_stmt;
 }
 
 
@@ -497,12 +592,29 @@ Code_For_Ast & Assignment_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 	CHECK_INVARIANT((lhs != NULL), "Lhs cannot be null");
 	CHECK_INVARIANT((rhs != NULL), "Rhs cannot be null");
 
-	lra.optimize_lra(mc_2m, lhs, rhs);
+	if(typeid(*rhs) == typeid(Name_Ast) || typeid(*rhs) == typeid(Number_Ast<int>))
+		lra.optimize_lra(mc_2m, lhs, rhs);
+
+	Register_Descriptor * register_s;
+
+	if(typeid(*rhs) == typeid(Comparison_Ast))
+		register_s = (lhs->get_symbol_entry()).get_register();
+
 	Code_For_Ast load_stmt = rhs->compile_and_optimize_ast(lra);
 
 	Register_Descriptor * result_register = load_stmt.get_reg();
 
 	Code_For_Ast store_stmt = lhs->create_store_stmt(result_register);
+
+	if(typeid(*rhs) == typeid(Comparison_Ast))
+	{
+		if(register_s != NULL)
+		  if(!(register_s->is_free()))
+			register_s->clear_lra_symbol_list();
+		(lhs->get_symbol_entry().set_register(NULL));
+		result_register->update_symbol_information(lhs->get_symbol_entry());
+		(lhs->get_symbol_entry().set_register(result_register));
+	}
 
 	list<Icode_Stmt *> ic_list;
 
@@ -766,6 +878,10 @@ Code_For_Ast & Number_Ast<DATA_TYPE>::compile_and_optimize_ast(Lra_Outcome & lra
 	CHECK_INVARIANT((lra.get_register() != NULL), "Register assigned through optimize_lra cannot be null");
 	Ics_Opd * load_register = new Register_Addr_Opd(lra.get_register());
 	Ics_Opd * opd = new Const_Opd<int>(constant);
+
+	Register_Descriptor * result_register = lra.get_register();
+	Symbol_Table_Entry & sym_entry = * new Symbol_Table_Entry();
+	result_register->update_symbol_information(sym_entry);
 
 	Icode_Stmt * load_stmt = new Move_IC_Stmt(imm_load, opd, load_register);
 

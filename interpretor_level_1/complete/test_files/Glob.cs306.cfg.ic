@@ -4,9 +4,7 @@
 label2:
  iLoad:	v0 <- 4
  store:	b <- v0
- iLoad:	v0 <- 3
- store:	a <- v0
- load:	v0 <- a
- load:	t0 <- b
- sgt:	t1 <- v0 , t0
+ iLoad:	t0 <- 3
+ store:	a <- t0
+ sgt:	t1 <- t0 , v0
  store:	a <- t1
