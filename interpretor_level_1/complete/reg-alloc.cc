@@ -197,17 +197,19 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 		}
 		else if (destination_register != NULL)
 		{
-			if(typeid(*source_memory) != typeid(Number_Ast<int>)){
-				result_register = destination_register;
-				is_same_as_destination = true;
-				load_needed = true;
-			}
-			else
-			{
-				result_register = machine_dscr_object.get_new_register();
-				is_a_new_register = true;
-				load_needed = true;
-			}
+				if(destination_register->get_use_for_expr_result())
+				{
+					result_register = destination_register;
+					is_same_as_destination = true;
+					load_needed = true;
+				}
+				else
+				{
+					result_register = machine_dscr_object.get_new_register();
+					is_a_new_register = true;
+					load_needed = true;
+				}
+			
 		}
 		else 
 		{
@@ -235,6 +237,7 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 			result_register = machine_dscr_object.get_new_register();
 			is_a_new_register = true;
 			load_needed = true;
+			destination_symbol_entry = &(destination_memory->get_symbol_entry());
 		}
 
 		break;
@@ -270,6 +273,7 @@ void Lra_Outcome::optimize_lra(Lra_Scenario lcase, Ast * destination_memory, Ast
 			result_register = machine_dscr_object.get_new_register();
 			is_a_new_register = true;
 			load_needed = true;
+			destination_symbol_entry = &(destination_memory->get_symbol_entry());
 		}
 		break;
 
@@ -365,6 +369,7 @@ void Machine_Description::clear_local_register_mappings()
 	{
 		Register_Descriptor * reg_desc = i->second;
 		reg_desc->clear_lra_symbol_list();
+		reg_desc->reset_use_for_expr_result();
 	}
 
 	/* 

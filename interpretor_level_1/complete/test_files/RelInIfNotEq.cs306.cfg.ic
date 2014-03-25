@@ -17,13 +17,13 @@ label3:
  iLoad:	v0 <- 4
  store:	a <- v0
  load:	t0 <- b
- sgt:	t0 <- v0 , t0
+ sgt:	t1 <- v0 , t0
+ load:	t0 <- c
+ sge:	t2 <- t1 , t0
+ store:	b <- t2
+ slt:	t0 <- t2 , v0
  load:	t1 <- c
- sge:	t1 <- t0 , t1
- store:	b <- t1
- slt:	t0 <- t1 , v0
- load:	t2 <- c
- sne:	t2 <- t0 , t2
- store:	c <- t2
+ sne:	t3 <- t0 , t1
+ store:	c <- t3
 
 label4:

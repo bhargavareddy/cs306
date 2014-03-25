@@ -22,13 +22,13 @@ label2:
 
 label3:
  load:	v0 <- e
- load:	v0 <- d
- sne:	v0 <- v0 , v0
- store:	c <- v0
- load:	t0 <- f
+ load:	t0 <- d
+ sne:	t1 <- v0 , t0
+ store:	c <- t1
+ load:	v0 <- f
  load:	t0 <- e
- sgt:	t0 <- t0 , t0
- store:	d <- t0
+ sgt:	t2 <- v0 , t0
+ store:	d <- t2
  goto label5
 
 label4:

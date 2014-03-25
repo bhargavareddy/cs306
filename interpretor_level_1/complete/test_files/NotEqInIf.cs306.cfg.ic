@@ -16,19 +16,19 @@ label2:
 
 label3:
  load:	v0 <- a
- load:	v0 <- b
- slt:	v0 <- v0 , v0
- load:	t0 <- c
- sge:	t0 <- v0 , t0
+ load:	t0 <- b
+ slt:	t1 <- v0 , t0
+ load:	v0 <- c
+ sge:	t0 <- t1 , v0
  store:	a <- t0
  goto label5
 
 label4:
  load:	v0 <- a
- load:	v0 <- b
- slt:	v0 <- v0 , v0
- load:	t0 <- c
- sge:	t0 <- v0 , t0
+ load:	t0 <- b
+ slt:	t1 <- v0 , t0
+ load:	v0 <- c
+ sge:	t0 <- t1 , v0
  store:	b <- t0
 
 label5:

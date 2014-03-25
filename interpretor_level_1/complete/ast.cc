@@ -425,18 +425,28 @@ Code_For_Ast & Comparison_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 	CHECK_INVARIANT((rhs != NULL), "Rhs cannot be null");
 
 	if(typeid(*lhs) == typeid(Number_Ast<int>))
-		lra.optimize_lra(c2r, lhs, NULL);
+	{	
+		// Optimising the LRA of the lhs with c2r as the reference
+		lra.optimize_lra(c2r, lhs, lhs);
+	}
 
 	else if(typeid(*lhs) == typeid(Name_Ast))
-		lra.optimize_lra(m2r,NULL,lhs);
+	{
+		// Optimising the LRA of the rhs with m2r as the reference
+		lra.optimize_lra(m2r,lhs,lhs);
+	}
 
 	Code_For_Ast & lsl = lhs->compile_and_optimize_ast(lra);
 
 	if(typeid(*rhs) == typeid(Number_Ast<int>))
-		lra.optimize_lra(c2r,rhs,NULL);
+	{
+		lra.optimize_lra(c2r,rhs,rhs);
+	}
 
 	else if(typeid(*rhs) == typeid(Name_Ast))
-		lra.optimize_lra(m2r,NULL,rhs);
+	{
+		lra.optimize_lra(m2r,rhs,rhs);
+	}
 
 	Code_For_Ast & lsr = rhs->compile_and_optimize_ast(lra);
 
@@ -451,19 +461,9 @@ Code_For_Ast & Comparison_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 	register_r->update_symbol_information(sym_entry);
 
 	Ics_Opd * register_result = new Register_Addr_Opd(register_r);
-	if(typeid(*lhs) == typeid(Number_Ast<int>) || typeid(*lhs) == typeid(Comparison_Ast))
-		load_register_l->clear_lra_symbol_list();
-	if(typeid(*lhs) == typeid(Name_Ast))
-		{
-			//(lhs->get_symbol_entry()).free_register(load_register_l);
-		}
-    if(typeid(*rhs) == typeid(Number_Ast<int>) || typeid(*rhs) == typeid(Comparison_Ast))
-		load_register_r->clear_lra_symbol_list();
-	if(typeid(*rhs) == typeid(Name_Ast))
-		{
-			//(rhs->get_symbol_entry()).free_register(load_register_r);
-		}
+
     Icode_Stmt * load_stmt = NULL;
+    list<Icode_Stmt *> ic_list;
 
     if(comp == 0) load_stmt = new Comparison_IC_Stmt(sge, register_opd_1,register_opd_2, register_result);
     if(comp == 1) load_stmt = new Comparison_IC_Stmt(sgt, register_opd_1,register_opd_2, register_result);
@@ -472,7 +472,26 @@ Code_For_Ast & Comparison_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
     if(comp == 4) load_stmt = new Comparison_IC_Stmt(seq, register_opd_1,register_opd_2, register_result);
     if(comp == 5) load_stmt = new Comparison_IC_Stmt(sne, register_opd_1,register_opd_2, register_result);
 
-    list<Icode_Stmt *> ic_list;
+    	if(typeid(*lhs) == typeid(Number_Ast<int>) || typeid(*lhs) == typeid(Comparison_Ast))
+    	{
+			load_register_l->clear_lra_symbol_list();
+		}
+	
+		if(typeid(*lhs) == typeid(Name_Ast) && !(load_register_l->get_use_for_expr_result()))
+		{
+			(lhs->get_symbol_entry()).free_register(load_register_l);
+		}
+    
+    	if(typeid(*rhs) == typeid(Number_Ast<int>) || typeid(*rhs) == typeid(Comparison_Ast))
+    	{
+			load_register_r->clear_lra_symbol_list();
+		}
+	
+		if(typeid(*rhs) == typeid(Name_Ast) && !(load_register_r->get_use_for_expr_result()))
+		{
+			(rhs->get_symbol_entry()).free_register(load_register_r);
+		}
+
 	
 	if (lsl.get_icode_list().empty() == false)
 		ic_list = lsl.get_icode_list();
@@ -606,17 +625,27 @@ Code_For_Ast & Assignment_Ast::compile_and_optimize_ast(Lra_Outcome & lra)
 
 	Code_For_Ast store_stmt = lhs->create_store_stmt(result_register);
 
+	list<Icode_Stmt *> ic_list;
+
 	if(typeid(*rhs) == typeid(Comparison_Ast))
 	{
 		if(register_s != NULL)
-		  if(!(register_s->is_free()))
 			register_s->clear_lra_symbol_list();
-		(lhs->get_symbol_entry().set_register(NULL));
+		lhs->get_symbol_entry().set_register(NULL);
 		result_register->update_symbol_information(lhs->get_symbol_entry());
-		(lhs->get_symbol_entry().set_register(result_register));
+		lhs->get_symbol_entry().set_register(result_register);
+	}
+	else
+	{
+		result_register->set_use_for_expr_result();
 	}
 
-	list<Icode_Stmt *> ic_list;
+	//cout<<result_register->get_name()<<endl;
+
+	if(result_register->is_free())
+	{
+		//cout<<"It is free"<<endl;
+	}
 
 	if (load_stmt.get_icode_list().empty() == false)
 		ic_list = load_stmt.get_icode_list();

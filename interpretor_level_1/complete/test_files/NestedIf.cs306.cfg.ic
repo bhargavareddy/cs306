@@ -15,30 +15,30 @@ label2:
 
 label3:
  load:	v0 <- b
- iLoad:	v0 <- 0
- sne:	t0 <- v0 , v0
- bne: t0 , zero : goto label4
+ iLoad:	t0 <- 0
+ sne:	t1 <- v0 , t0
+ bne: t1 , zero : goto label4
  goto label12
 
 label4:
  load:	v0 <- c
- iLoad:	v0 <- 0
- sne:	t0 <- v0 , v0
- bne: t0 , zero : goto label5
+ iLoad:	t0 <- 0
+ sne:	t1 <- v0 , t0
+ bne: t1 , zero : goto label5
  goto label12
 
 label5:
  load:	v0 <- a
- load:	v0 <- b
- sge:	v0 <- v0 , v0
- bne: v0 , zero : goto label6
+ load:	t0 <- b
+ sge:	t1 <- v0 , t0
+ bne: t1 , zero : goto label6
  goto label9
 
 label6:
  load:	v0 <- a
- load:	v0 <- c
- sge:	v0 <- v0 , v0
- bne: v0 , zero : goto label7
+ load:	t0 <- c
+ sge:	t1 <- v0 , t0
+ bne: t1 , zero : goto label7
  goto label8
 
 label7:
@@ -53,9 +53,9 @@ label8:
 
 label9:
  load:	v0 <- b
- load:	v0 <- c
- sge:	v0 <- v0 , v0
- bne: v0 , zero : goto label10
+ load:	t0 <- c
+ sge:	t1 <- v0 , t0
+ bne: t1 , zero : goto label10
  goto label11
 
 label10:
